@@ -6,7 +6,7 @@ from esphome import automation
 from esphome.automation import maybe_simple_id
 
 DEPENDENCIES = ["uart"]
-CODEOWNERS = ["@sebcaps"]
+CODEOWNERS = ["@descipher"]
 MULTI_CONF = True
 
 ld2420_ns = cg.esphome_ns.namespace("ld2420")
