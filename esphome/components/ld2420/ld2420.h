@@ -21,8 +21,15 @@ static const uint8_t CMD_ENABLE_CONF = 0x00FF;
 static const uint8_t CMD_DISABLE_CONF = 0x00FE;
 static const uint8_t CMD_MAXDIST_DURATION = 0x0060;
 static const uint8_t CMD_QUERY = 0x0061;
+static const uint8_t CMD_ENGINEERING_MODE = 0x0062;
+static const uint8_t CMD_NORMAL_MODE = 0x0063;
 static const uint8_t CMD_GATE_SENS = 0x0064;
 static const uint8_t CMD_VERSION = 0x00A0;
+static const uint8_t CMD_BAUD_RATE = 0x00A1;  // 0x0001-0x0008 9600 .. doubles on increment up to 460800
+static const uint8_t CMD_FACTORY_RESET = 0x00A2;
+static const uint8_t CMD_RESTART = 0x00A3;
+
+
 
 // Commands values
 static const uint8_t CMD_MAX_MOVE_VALUE = 0x0000;
