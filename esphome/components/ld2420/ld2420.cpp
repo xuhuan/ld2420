@@ -56,7 +56,6 @@ void LD2420Component::loop() {
 
   while (available()) {
     int ch = read();
-    ESP_LOGE(TAG,"%X",ch);
     this->readline_(ch, buffer, max_line_length);
   }
 }
@@ -170,6 +169,7 @@ void LD2420Component::handle_periodic_data_(uint8_t *buffer, int len) {
 }
 
 void LD2420Component::handle_ack_data_(uint8_t *buffer, int len) {
+  ESP_LOGI(TAG,"%x",buffer);
   ESP_LOGV(TAG, "Handling ACK DATA for COMMAND");
   if (len < 10) {
     ESP_LOGE(TAG, "Error with last command : incorrect length");
