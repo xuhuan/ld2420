@@ -55,7 +55,9 @@ void LD2420Component::loop() {
   static uint8_t buffer[max_line_length];
 
   while (available()) {
-    this->readline_(read(), buffer, max_line_length);
+    int ch = read();
+    ESP_LOGD(TAG,"%X",ch);
+    this->readline_(ch, buffer, max_line_length);
   }
 }
 
