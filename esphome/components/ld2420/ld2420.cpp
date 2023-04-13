@@ -241,9 +241,8 @@ void LD2420Component::handle_ack_data_(uint8_t *buffer, int len) {
 void LD2420Component::readline_(int readch, uint8_t *buffer, int len) {
   static int pos = 0;
 
-  ESP_LOGD(TAG,"%X",readch);
-
   if (readch >= 0) {
+    ESP_LOGI(TAG,"%X",readch);
     if (pos < len - 1) {
       buffer[pos++] = readch;
       buffer[pos] = 0;
