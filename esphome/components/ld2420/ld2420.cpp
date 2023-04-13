@@ -31,20 +31,21 @@ void LD2420Component::dump_config() {
 
 void LD2420Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up LD2420...");
-  this->set_config_mode_(true);
-  this->set_max_distances_timeout_(this->max_move_distance_, this->max_still_distance_, this->timeout_);
+  //this->set_config_mode_(true);
+  //this->set_max_distances_timeout_(this->max_move_distance_, this->max_still_distance_, this->timeout_);
   // Configure Gates sensitivity
-  this->set_gate_threshold_(0, this->rg0_move_threshold_, this->rg0_still_threshold_);
-  this->set_gate_threshold_(1, this->rg1_move_threshold_, this->rg1_still_threshold_);
-  this->set_gate_threshold_(2, this->rg2_move_threshold_, this->rg2_still_threshold_);
-  this->set_gate_threshold_(3, this->rg3_move_threshold_, this->rg3_still_threshold_);
-  this->set_gate_threshold_(4, this->rg4_move_threshold_, this->rg4_still_threshold_);
-  this->set_gate_threshold_(5, this->rg5_move_threshold_, this->rg5_still_threshold_);
-  this->set_gate_threshold_(6, this->rg6_move_threshold_, this->rg6_still_threshold_);
-  this->set_gate_threshold_(7, this->rg7_move_threshold_, this->rg7_still_threshold_);
-  this->set_gate_threshold_(8, this->rg8_move_threshold_, this->rg8_still_threshold_);
+  //this->set_gate_threshold_(0, this->rg0_move_threshold_, this->rg0_still_threshold_);
+  //this->set_gate_threshold_(1, this->rg1_move_threshold_, this->rg1_still_threshold_);
+  //this->set_gate_threshold_(2, this->rg2_move_threshold_, this->rg2_still_threshold_);
+  //this->set_gate_threshold_(3, this->rg3_move_threshold_, this->rg3_still_threshold_);
+  //this->set_gate_threshold_(4, this->rg4_move_threshold_, this->rg4_still_threshold_);
+  //this->set_gate_threshold_(5, this->rg5_move_threshold_, this->rg5_still_threshold_);
+  //this->set_gate_threshold_(6, this->rg6_move_threshold_, this->rg6_still_threshold_);
+  //this->set_gate_threshold_(7, this->rg7_move_threshold_, this->rg7_still_threshold_);
+  //this->set_gate_threshold_(8, this->rg8_move_threshold_, this->rg8_still_threshold_);
   this->get_version_();
-  this->set_config_mode_(false);
+  //this->set_config_mode_(false);
+  this->send_command_(CMD_ENGINEERING_MODE, nullptr, 0);
   ESP_LOGCONFIG(TAG, "Firmware Version : %u.%u.%u%u%u%u", this->version_[0], this->version_[1], this->version_[2],
                 this->version_[3], this->version_[4], this->version_[5]);
   ESP_LOGCONFIG(TAG, "LD2420 setup complete.");
@@ -55,9 +56,7 @@ void LD2420Component::loop() {
   static uint8_t buffer[max_line_length];
 
   while (available()) {
-    int ch = read();
-      ESP_LOGI(TAG,"%x",ch);
-    this->readline_(ch, buffer, max_line_length);
+    this->readline_(read(), buffer, max_line_length);
   }
 }
 
@@ -244,7 +243,6 @@ void LD2420Component::readline_(int readch, uint8_t *buffer, int len) {
   static int pos = 0;
 
   if (readch >= 0) {
-    ESP_LOGI(TAG,"%X",readch);
     if (pos < len - 1) {
       buffer[pos++] = readch;
       buffer[pos] = 0;
