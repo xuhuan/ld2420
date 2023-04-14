@@ -60,10 +60,10 @@ CONFIG_SCHEMA = cv.All(
         {
             cv.GenerateID(): cv.declare_id(LD2420Component),
             cv.Optional(CONF_DETECTION_GATE_MIN, default="0"): cv.All(
-                cv.int, cv.one_of(*GATES)
+                cv.int_, cv.one_of(*GATES)
             ),
             cv.Optional(CONF_DETECTION_GATE_MAX, default="9"): cv.All(
-                cv.int, cv.one_of(*GATES)
+                cv.int_, cv.one_of(*GATES)
             ),
             cv.Optional(CONF_PRESENCE_TIME_WINDOW, default="5s"): cv.All(
                 cv.positive_time_period_seconds,
