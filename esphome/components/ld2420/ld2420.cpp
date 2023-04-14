@@ -45,19 +45,19 @@ void LD2420Component::setup() {
   //this->set_gate_threshold_(8, this->rg8_move_threshold_, this->rg8_still_threshold_);
   this->get_version_();
   //this->set_config_mode_(false);
-  this->send_command_(CMD_ENGINEERING_MODE, nullptr, 0);
+  //this->send_command_(CMD_ENGINEERING_MODE, nullptr, 0);
   ESP_LOGCONFIG(TAG, "Firmware Version : %u.%u.%u%u%u%u", this->version_[0], this->version_[1], this->version_[2],
                 this->version_[3], this->version_[4], this->version_[5]);
   ESP_LOGCONFIG(TAG, "LD2420 setup complete.");
 }
 
 void LD2420Component::loop() {
-  const int max_line_length = 80;
+  const int max_line_length = 160;
   static uint8_t buffer[max_line_length];
 
   while (available()) {
     int ch = read();
-    ESP_LOGI(TAG,"%02X",ch);
+    ESP_LOGI(TAG,"%x",ch);
     this->readline_(ch, buffer, max_line_length);
   }
 }
@@ -170,6 +170,19 @@ void LD2420Component::handle_periodic_data_(uint8_t *buffer, int len) {
 #endif
 }
 
+
+void LD2420Component::handle_normal_mode_(uint8_t *buffer, int len) {
+  const char *p = (const char *)buffer;
+  ESP_LOGV(TAG, "Handling Normal Mode Text");
+  if ((p[0] == 0x4F) && (p[0] == 0x4E)) { // "ON"
+    char ** pEnd;
+    int range_val = strtoul(p,pEnd,10);
+       ESP_LOGI(TAG, "Range %d", range_val);
+     }
+     return;
+  }
+}
+
 void LD2420Component::handle_ack_data_(uint8_t *buffer, int len) {
   ESP_LOGV(TAG, "Handling ACK DATA for COMMAND");
   if (len < 10) {
@@ -207,9 +220,9 @@ void LD2420Component::handle_ack_data_(uint8_t *buffer, int len) {
       this->version_[5] = buffer[14];
 
       break;
-    case lowbyte(CMD_GATE_SENS):
-      ESP_LOGV(TAG, "Handled sensitivity command");
-      break;
+    //case lowbyte(CMD_GATE_SENS):
+    //  ESP_LOGV(TAG, "Handled sensitivity command");
+    //  break;
     case lowbyte(CMD_QUERY):  // Query parameters response
     {
       if (buffer[10] != 0xAA)

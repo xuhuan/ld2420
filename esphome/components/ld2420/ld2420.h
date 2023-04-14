@@ -19,6 +19,10 @@ namespace ld2420 {
 // Commands
 static const uint8_t CMD_ENABLE_CONF = 0x00FF;
 static const uint8_t CMD_DISABLE_CONF = 0x00FE;
+static const uint8_t CMD_WRITE_REGISTERS = 0x0007;
+static const uint8_t CMD_READ_REGISTERS = 0x0008;
+static const uint8_t CMD_UNKNOWN1 = 0x0012;
+
 static const uint8_t CMD_MAXDIST_DURATION = 0x0060;
 static const uint8_t CMD_QUERY = 0x0061;
 static const uint8_t CMD_ENGINEERING_MODE = 0x0062;
@@ -90,9 +94,14 @@ class LD2420Component : public Component, public uart::UARTDevice {
   void set_timeout(uint16_t value) { this->timeout_ = value; };
   void set_max_move_distance(uint8_t value) { this->max_move_distance_ = value; };
   void set_max_still_distance(uint8_t value) { this->max_still_distance_ = value; };
-  void set_range_config(int rg0_move, int rg0_still, int rg1_move, int rg1_still, int rg2_move, int rg2_still,
-                        int rg3_move, int rg3_still, int rg4_move, int rg4_still, int rg5_move, int rg5_still,
-                        int rg6_move, int rg6_still, int rg7_move, int rg7_still, int rg8_move, int rg8_still) {
+  void set_range_config(int rg0_move, int rg0_still, int rg1_move, int rg1_still,
+                        int rg2_move, int rg2_still, int rg3_move, int rg3_still,
+                        int rg4_move, int rg4_still, int rg5_move, int rg5_still,
+                        int rg6_move, int rg6_still, int rg7_move, int rg7_still,
+                        int rg8_move, int rg8_still, int rg9_move, int rg9_still,
+                        int rg10_move, int rg10_still, int rg11_move, int rg11_still,
+                        int rg12_move, int rg12_still, int rg13_move, int rg13_still,
+                        int rg14_move, int rg14_still, int rg15_move, int rg15_still) {
     this->rg0_move_threshold_ = rg0_move;
     this->rg0_still_threshold_ = rg0_still;
     this->rg1_move_threshold_ = rg1_move;
@@ -111,7 +120,22 @@ class LD2420Component : public Component, public uart::UARTDevice {
     this->rg7_still_threshold_ = rg7_still;
     this->rg8_move_threshold_ = rg8_move;
     this->rg8_still_threshold_ = rg8_still;
+    this->rg9_move_threshold_ = rg9_move;
+    this->rg9_still_threshold_ = rg9_still;
+    this->rg10_move_threshold_ = rg10_move;
+    this->rg10_still_threshold_ = rg10_still;
+    this->rg11_move_threshold_ = rg11_move;
+    this->rg11_still_threshold_ = rg11_still;
+    this->rg12_move_threshold_ = rg12_move;
+    this->rg12_still_threshold_ = rg12_still;
+    this->rg13_move_threshold_ = rg13_move;
+    this->rg13_still_threshold_ = rg13_still;
+    this->rg14_move_threshold_ = rg14_move;
+    this->rg14_still_threshold_ = rg14_still;
+    this->rg15_move_threshold_ = rg15_move;
+    this->rg15_still_threshold_ = rg15_still;
   };
+
   int moving_sensitivities[9] = {0};
   int still_sensitivities[9] = {0};
 
@@ -133,6 +157,7 @@ class LD2420Component : public Component, public uart::UARTDevice {
   void set_gate_threshold_(uint8_t gate, uint8_t motionsens, uint8_t stillsens);
   void set_config_mode_(bool enable);
   void handle_periodic_data_(uint8_t *buffer, int len);
+  void handle_normal_mode_(uint8_t *buffer, int len);
   void handle_ack_data_(uint8_t *buffer, int len);
   void readline_(int readch, uint8_t *buffer, int len);
   void query_parameters_();
@@ -143,10 +168,14 @@ class LD2420Component : public Component, public uart::UARTDevice {
   uint8_t max_still_distance_;
 
   uint8_t version_[6];
-  uint8_t rg0_move_threshold_, rg0_still_threshold_, rg1_move_threshold_, rg1_still_threshold_, rg2_move_threshold_,
-      rg2_still_threshold_, rg3_move_threshold_, rg3_still_threshold_, rg4_move_threshold_, rg4_still_threshold_,
-      rg5_move_threshold_, rg5_still_threshold_, rg6_move_threshold_, rg6_still_threshold_, rg7_move_threshold_,
-      rg7_still_threshold_, rg8_move_threshold_, rg8_still_threshold_;
+  uint8_t rg0_move_threshold_, rg0_still_threshold_, rg1_move_threshold_, rg1_still_threshold_,
+      rg2_move_threshold_, rg2_still_threshold_, rg3_move_threshold_, rg3_still_threshold_,
+      rg4_move_threshold_, rg4_still_threshold_, rg5_move_threshold_, rg5_still_threshold_,
+      rg6_move_threshold_, rg6_still_threshold_, rg7_move_threshold_, rg7_still_threshold_,
+      rg8_move_threshold_, rg8_still_threshold_, rg9_move_threshold_, rg9_still_threshold_,
+      rg10_move_threshold_, rg10_still_threshold_, rg11_move_threshold_, rg11_still_threshold_,
+      rg12_move_threshold_, rg12_still_threshold_, rg13_move_threshold_, rg13_still_threshold_,
+      rg14_move_threshold_, rg14_still_threshold_, rg15_move_threshold_, rg15_still_threshold_
 };
 
 }  // namespace ld2420
