@@ -15,8 +15,8 @@ LD2420Restart = ld2420_ns.class_("LD2420Restart", automation.Action)
 CONF_LD2420_ID = "ld2420_id"
 
 
-CONF_DETECTION_GATE_MIN = "range_distance_minimum" # 0-15
-CONF_DETECTION_GATE_MAX = "range_distance_maximum" # 0-15
+CONF_DETECTION_GATE_MIN = "detection_gate_minimum" # 0-15
+CONF_DETECTION_GATE_MAX = "detection_gate_maximum" # 0-15
 CONF_PRESENCE_TIME_WINDOW = "presence_time_window" # Seconds
 CONF_G0_MOVE_THRESHOLD = "g0_move_threshold" # 0-65536
 CONF_G0_STILL_THRESHOLD = "g0_still_threshold" # 0-65536
@@ -53,17 +53,17 @@ CONF_G15_STILL_THRESHOLD = "g6_still_threshold"
 CONF_TAKE_EFFECT_FRAMES = "take_effect_frames"
 CONF_LOOSE_EFFECT_FRAMES = "loose_effect_frames"
 
-GATES = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+GATES = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(LD2420Component),
             cv.Optional(CONF_DETECTION_GATE_MIN, default="0"): cv.All(
-                cv.distance, cv.one_of(*GATES, float=False)
+                cv.int_, cv.one_of(*GATES)
             ),
             cv.Optional(CONF_DETECTION_GATE_MAX, default="9"): cv.All(
-                cv.distance, cv.one_of(*GATES, float=False)
+                cv.int_, cv.one_of(*GATES)
             ),
             cv.Optional(CONF_PRESENCE_TIME_WINDOW, default="5s"): cv.All(
                 cv.positive_time_period_seconds,
