@@ -180,8 +180,8 @@ void LD2420Component::handle_normal_mode_(uint8_t *buffer, int len) {
        ESP_LOGI(TAG, "Range %d", range_val);
      }
      return;
-  }
 }
+
 
 void LD2420Component::handle_ack_data_(uint8_t *buffer, int len) {
   ESP_LOGV(TAG, "Handling ACK DATA for COMMAND");
@@ -311,7 +311,7 @@ void LD2420Component::set_max_distances_timeout_(uint8_t max_moving_distance_ran
   this->send_command_(CMD_MAXDIST_DURATION, value, 18);
   this->query_parameters_();
 }
-void LD2420Component::set_gate_threshold_(uint8_t gate, uint8_t motionsens, uint8_t stillsens) {
+void LD2420Component::set_gate_threshold_(uint8_t gate, uint16_t motionsens, uint16_t stillsens) {
   // reference
   // https://drive.google.com/drive/folders/1p4dhbEJA3YubyIjIIC7wwVsSo8x29Fq-?spm=a2g0o.detail.1000023.17.93465697yFwVxH
   //   Send data: configure the motion sensitivity of distance gate 3 to 40, and the static sensitivity of 40

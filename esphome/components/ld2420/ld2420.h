@@ -154,7 +154,7 @@ class LD2420Component : public Component, public uart::UARTDevice {
 
   void set_max_distances_timeout_(uint8_t max_moving_distance_range, uint8_t max_still_distance_range,
                                   uint16_t timeout);
-  void set_gate_threshold_(uint8_t gate, uint8_t motionsens, uint8_t stillsens);
+  void set_gate_threshold_(uint8_t gate, uint16_t motionsens, uint16_t stillsens);
   void set_config_mode_(bool enable);
   void handle_periodic_data_(uint8_t *buffer, int len);
   void handle_normal_mode_(uint8_t *buffer, int len);
@@ -168,14 +168,14 @@ class LD2420Component : public Component, public uart::UARTDevice {
   uint8_t max_still_distance_;
 
   uint8_t version_[6];
-  uint8_t rg0_move_threshold_, rg0_still_threshold_, rg1_move_threshold_, rg1_still_threshold_,
+  uint16_t rg0_move_threshold_, rg0_still_threshold_, rg1_move_threshold_, rg1_still_threshold_,
       rg2_move_threshold_, rg2_still_threshold_, rg3_move_threshold_, rg3_still_threshold_,
       rg4_move_threshold_, rg4_still_threshold_, rg5_move_threshold_, rg5_still_threshold_,
       rg6_move_threshold_, rg6_still_threshold_, rg7_move_threshold_, rg7_still_threshold_,
       rg8_move_threshold_, rg8_still_threshold_, rg9_move_threshold_, rg9_still_threshold_,
       rg10_move_threshold_, rg10_still_threshold_, rg11_move_threshold_, rg11_still_threshold_,
       rg12_move_threshold_, rg12_still_threshold_, rg13_move_threshold_, rg13_still_threshold_,
-      rg14_move_threshold_, rg14_still_threshold_, rg15_move_threshold_, rg15_still_threshold_
+      rg14_move_threshold_, rg14_still_threshold_, rg15_move_threshold_, rg15_still_threshold_;
 };
 
 }  // namespace ld2420
