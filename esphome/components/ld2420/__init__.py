@@ -53,17 +53,15 @@ CONF_G15_STILL_THRESHOLD = "g6_still_threshold"
 CONF_TAKE_EFFECT_FRAMES = "take_effect_frames"
 CONF_LOOSE_EFFECT_FRAMES = "loose_effect_frames"
 
-GATES = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
-
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(LD2420Component),
-            cv.Optional(CONF_DETECTION_GATE_MIN, default="0"): cv.All(
-                cv.int_, cv.one_of(*GATES)
+            cv.Optional(CONF_DETECTION_GATE_MIN, default=0): cv.int_range(
+                min=0, max=15
             ),
-            cv.Optional(CONF_DETECTION_GATE_MAX, default="9"): cv.All(
-                cv.int_, cv.one_of(*GATES)
+            cv.Optional(CONF_DETECTION_GATE_MAX, default=9): cv.int_range(
+                min=0, max=15
             ),
             cv.Optional(CONF_PRESENCE_TIME_WINDOW, default="5s"): cv.All(
                 cv.positive_time_period_seconds,
