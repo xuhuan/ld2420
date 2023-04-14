@@ -57,18 +57,18 @@ CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(LD2420Component),
+            cv.Optional(CONF_DETECTION_GATE_MIN): cv.All(
+                cv.int_range(min=0, max=15, default=0)
+            ),
+            cv.Optional(CONF_DETECTION_GATE_MAX): cv.All(
+                cv.int_range(min=0, max=15, default=0)
+            ),
             cv.Optional(CONF_PRESENCE_TIME_WINDOW, default="5s"): cv.All(
                 cv.positive_time_period_seconds,
                 cv.Range(max=cv.TimePeriod(seconds=32767)),
             ),
-            cv.Optional(CONF_DETECTION_GATE_MIN, default=0): cv.int_range(
-                min=0, max=15
-            ),
-            cv.Optional(CONF_DETECTION_GATE_MAX, default=9): cv.int_range(
-                min=0, max=15
-            ),
-            cv.Optional(CONF_G0_MOVE_THRESHOLD, default=60000): cv.int_range(
-                min=0, max=65535
+            cv.Optional(CONF_G0_MOVE_THRESHOLD): cv.int_range(
+                min=0, max=65535, default=60000
             ),
             cv.Optional(CONF_G0_STILL_THRESHOLD, default=60000): cv.int_range(
                 min=0, max=65535
