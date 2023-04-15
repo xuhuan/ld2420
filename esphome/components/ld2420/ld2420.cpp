@@ -276,7 +276,11 @@ void LD2420Component::readline_(int readch, uint8_t *buffer, int len) {
         pos = 0;  // Reset position index ready for next time
       }
     }
-    this->handle_normal_mode_(buffer, len);
+    if (buffer[pos] == 0x4F || buffer[pos] == 0x52) {
+        ESP_LOGV(TAG, "Normal mode data");
+        this->handle_normal_mode_(buffer, pos);
+        pos = 0;  // Reset position index ready for next time
+    }
   }
 }
 
