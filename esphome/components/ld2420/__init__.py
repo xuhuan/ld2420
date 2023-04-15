@@ -53,22 +53,24 @@ CONF_G15_STILL_THRESHOLD = "g6_still_threshold"
 CONF_TAKE_EFFECT_FRAMES = "take_effect_frames"
 CONF_LOOSE_EFFECT_FRAMES = "loose_effect_frames"
 
+DISTANCES = [0.6, 1.2, 1.8, 2.4, 3, 3.6, 4.2, 4.8, 5.4, 6, 6.6, 7.2, 7.8, 8.4, 9]
+
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(LD2420Component),
-            cv.Optional(CONF_DETECTION_GATE_MIN): cv.All(
-                cv.int_range(min=0, max=15, default=0)
+            cv.Optional(CONF_DETECTION_GATE_MAX, default="6"): cv.All(
+                cv.distance, cv.one_of(*DISTANCES, float=True)
             ),
-            cv.Optional(CONF_DETECTION_GATE_MAX): cv.All(
-                cv.int_range(min=0, max=15, default=0)
+            cv.Optional(CONF_DETECTION_GATE_MIN, default=".6"): cv.All(
+                cv.distance, cv.one_of(*DISTANCES, float=True)
             ),
-            cv.Optional(CONF_PRESENCE_TIME_WINDOW, default="5s"): cv.All(
+            cv.Optional(CONF_TIMEOUT, default="5s"): cv.All(
                 cv.positive_time_period_seconds,
                 cv.Range(max=cv.TimePeriod(seconds=32767)),
             ),
-            cv.Optional(CONF_G0_MOVE_THRESHOLD): cv.int_range(
-                min=0, max=65535, default=60000
+            cv.Optional(CONF_G0_MOVE_THRESHOLD, default=60000): cv.int_range(
+                min=0, max=65535
             ),
             cv.Optional(CONF_G0_STILL_THRESHOLD, default=60000): cv.int_range(
                 min=0, max=65535
@@ -184,8 +186,8 @@ async def to_code(config):
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
     cg.add(var.set_timeout(config[CONF_PRESENCE_TIME_WINDOW]))
-    cg.add(var.set_min_move_distance(int(config[CONF_DETECTION_GATE_MIN])))
-    cg.add(var.set_max_move_distance(int(config[CONF_DETECTION_GATE_MAX])))
+    cg.add(var.set_min_move_distance(int(config[CONF_DETECTION_GATE_MIN]/0.6)))
+    cg.add(var.set_max_move_distance(int(config[CONF_DETECTION_GATE_MAX]/0.6)))
     cg.add(
         var.set_range_config(
             config[CONF_G0_MOVE_THRESHOLD],
