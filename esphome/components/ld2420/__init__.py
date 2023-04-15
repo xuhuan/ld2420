@@ -1,7 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import uart
-from esphome.const import CONF_ID, CONF_TIMEOUT
+from esphome.const import CONF_ID 
 from esphome import automation
 from esphome.automation import maybe_simple_id
 
@@ -15,8 +15,8 @@ LD2420Restart = ld2420_ns.class_("LD2420Restart", automation.Action)
 CONF_LD2420_ID = "ld2420_id"
 
 
-CONF_DETECTION_GATE_MIN = "detection_distance_minimum"
-CONF_DETECTION_GATE_MAX = "detection_distance_maximum"
+CONF_DETECTION_GATE_MIN = "detection_gate_minimum"
+CONF_DETECTION_GATE_MAX = "detection_gate_maximum"
 CONF_PRESENCE_TIME_WINDOW = "presence_time_window"
 CONF_G0_MOVE_THRESHOLD = "g0_move_threshold"
 CONF_G0_STILL_THRESHOLD = "g0_still_threshold"
@@ -53,25 +53,17 @@ CONF_G15_STILL_THRESHOLD = "g6_still_threshold"
 CONF_TAKE_EFFECT_FRAMES = "take_effect_frames"
 CONF_LOOSE_EFFECT_FRAMES = "loose_effect_frames"
 
-DISTANCES = [0, 0.6, 1.2, 1.8, 2.4, 3, 3.6, 4.2, 4.8, 5.4, 6, 6.6, 7.2, 7.8, 8.4, 9]
+GATES = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(LD2420Component),
-            cv.Optional(CONF_DETECTION_GATE_MAX, default="4.5m"): cv.All(
-                cv.distance, cv.one_of(*DISTANCES, float=True)
+            cv.Optional(CONF_DETECTION_GATE_MAX, default=9): cv.int_range(
+                min=0, max=15
             ),
-            cv.Optional(CONF_DETECTION_GATE_MIN, default="4.5m"): cv.All(
-                cv.distance, cv.one_of(*DISTANCES, float=True)
-            ),
-            cv.Optional(CONF_TIMEOUT, default="5s"): cv.All(
-                cv.positive_time_period_seconds,
-                cv.Range(max=cv.TimePeriod(seconds=32767)),
-            ),
-            cv.Optional(CONF_TIMEOUT, default="5s"): cv.All(
-                cv.positive_time_period_seconds,
-                cv.Range(max=cv.TimePeriod(seconds=32767)),
+            cv.Optional(CONF_DETECTION_GATE_MIN, default=1): cv.int_range(
+                min=0, max=15
             ),
             cv.Optional(CONF_PRESENCE_TIME_WINDOW, default="120s"): cv.All(
                 cv.positive_time_period_seconds,
