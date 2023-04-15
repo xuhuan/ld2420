@@ -15,8 +15,8 @@ LD2420Restart = ld2420_ns.class_("LD2420Restart", automation.Action)
 CONF_LD2420_ID = "ld2420_id"
 
 
-CONF_DETECTION_GATE_MIN = "detection_gate_minimum"
-CONF_DETECTION_GATE_MAX = "detection_gate_maximum"
+CONF_DETECTION_GATE_MIN = "detection_distance_minimum"
+CONF_DETECTION_GATE_MAX = "detection_distance_maximum"
 CONF_PRESENCE_TIME_WINDOW = "presence_time_window"
 CONF_G0_MOVE_THRESHOLD = "g0_move_threshold"
 CONF_G0_STILL_THRESHOLD = "g0_still_threshold"
@@ -59,11 +59,15 @@ CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(LD2420Component),
-            cv.Optional(CONF_DETECTION_GATE_MAX, default="6m"): cv.All(
+            cv.Optional(CONF_DETECTION_GATE_MAX, default="4.5m"): cv.All(
                 cv.distance, cv.one_of(*DISTANCES, float=True)
             ),
-            cv.Optional(CONF_DETECTION_GATE_MIN, default="0.6m"): cv.All(
+            cv.Optional(CONF_DETECTION_GATE_MIN, default="4.5m"): cv.All(
                 cv.distance, cv.one_of(*DISTANCES, float=True)
+            ),
+            cv.Optional(CONF_TIMEOUT, default="5s"): cv.All(
+                cv.positive_time_period_seconds,
+                cv.Range(max=cv.TimePeriod(seconds=32767)),
             ),
             cv.Optional(CONF_TIMEOUT, default="5s"): cv.All(
                 cv.positive_time_period_seconds,
