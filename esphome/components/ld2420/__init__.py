@@ -15,11 +15,11 @@ LD2420Restart = ld2420_ns.class_("LD2420Restart", automation.Action)
 CONF_LD2420_ID = "ld2420_id"
 
 
-CONF_DETECTION_GATE_MIN = "detection_gate_minimum" # 0-15
-CONF_DETECTION_GATE_MAX = "detection_gate_maximum" # 0-15
-CONF_PRESENCE_TIME_WINDOW = "presence_time_window" # Seconds
-CONF_G0_MOVE_THRESHOLD = "g0_move_threshold" # 0-65536
-CONF_G0_STILL_THRESHOLD = "g0_still_threshold" # 0-65536
+CONF_DETECTION_GATE_MIN = "detection_gate_minimum"
+CONF_DETECTION_GATE_MAX = "detection_gate_maximum"
+CONF_PRESENCE_TIME_WINDOW = "presence_time_window"
+CONF_G0_MOVE_THRESHOLD = "g0_move_threshold"
+CONF_G0_STILL_THRESHOLD = "g0_still_threshold"
 CONF_G1_MOVE_THRESHOLD = "g1_move_threshold"
 CONF_G1_STILL_THRESHOLD = "g1_still_threshold"
 CONF_G2_MOVE_THRESHOLD = "g2_move_threshold"
@@ -53,19 +53,23 @@ CONF_G15_STILL_THRESHOLD = "g6_still_threshold"
 CONF_TAKE_EFFECT_FRAMES = "take_effect_frames"
 CONF_LOOSE_EFFECT_FRAMES = "loose_effect_frames"
 
-DISTANCES = [0.6, 1.2, 1.8, 2.4, 3, 3.6, 4.2, 4.8, 5.4, 6, 6.6, 7.2, 7.8, 8.4, 9]
+DISTANCES = [0, 0.6, 1.2, 1.8, 2.4, 3, 3.6, 4.2, 4.8, 5.4, 6, 6.6, 7.2, 7.8, 8.4, 9]
 
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
             cv.GenerateID(): cv.declare_id(LD2420Component),
-            cv.Optional(CONF_DETECTION_GATE_MAX, default="6"): cv.All(
+            cv.Optional(CONF_DETECTION_GATE_MAX, default="6m"): cv.All(
                 cv.distance, cv.one_of(*DISTANCES, float=True)
             ),
-            cv.Optional(CONF_DETECTION_GATE_MIN, default=".6"): cv.All(
+            cv.Optional(CONF_DETECTION_GATE_MIN, default="0.6m"): cv.All(
                 cv.distance, cv.one_of(*DISTANCES, float=True)
             ),
             cv.Optional(CONF_TIMEOUT, default="5s"): cv.All(
+                cv.positive_time_period_seconds,
+                cv.Range(max=cv.TimePeriod(seconds=32767)),
+            ),
+            cv.Optional(CONF_PRESENCE_TIME_WINDOW, default="120s"): cv.All(
                 cv.positive_time_period_seconds,
                 cv.Range(max=cv.TimePeriod(seconds=32767)),
             ),
