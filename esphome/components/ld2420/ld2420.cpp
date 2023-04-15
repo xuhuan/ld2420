@@ -57,7 +57,7 @@ void LD2420Component::loop() {
 
   while (available()) {
     int ch = read();
-    ESP_LOGI(TAG,"%02X",ch);
+    //ESP_LOGI(TAG,"%02X",ch);
     this->readline_(ch, buffer, max_line_length);
   }
 }
@@ -276,6 +276,7 @@ void LD2420Component::readline_(int readch, uint8_t *buffer, int len) {
         pos = 0;  // Reset position index ready for next time
       }
     }
+    this->handle_normal_mode_(buffer, len);
   }
 }
 
