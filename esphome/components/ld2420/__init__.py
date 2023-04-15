@@ -185,7 +185,7 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await uart.register_uart_device(var, config)
-    cg.add(var.set_timeout(config[CONF_TIMEOUT]))
+    cg.add(var.set_timeout(config[CONF_PRESENCE_TIME_WINDOW]))
     cg.add(var.set_min_move_distance(int(config[CONF_DETECTION_GATE_MIN]/0.6)))
     cg.add(var.set_max_move_distance(int(config[CONF_DETECTION_GATE_MAX]/0.6)))
     cg.add(
