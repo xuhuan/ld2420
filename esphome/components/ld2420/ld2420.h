@@ -92,8 +92,8 @@ class LD2420Component : public Component, public uart::UARTDevice {
 #endif
 
   void set_timeout(uint16_t value) { this->timeout_ = value; };
-  void set_max_move_distance(uint8_t value) { this->max_move_distance_ = value; };
-  void set_max_still_distance(uint8_t value) { this->max_still_distance_ = value; };
+  void set_max_gate(uint8_t value) { this->max_gate_distance_ = value; };
+  void set_min_gate(uint8_t value) { this->min_gate_distance_ = value; };
   void set_range_config(int rg0_move, int rg0_still, int rg1_move, int rg1_still,
                         int rg2_move, int rg2_still, int rg3_move, int rg3_still,
                         int rg4_move, int rg4_still, int rg5_move, int rg5_still,
@@ -164,8 +164,8 @@ class LD2420Component : public Component, public uart::UARTDevice {
   void get_version_();
 
   uint16_t timeout_;
-  uint8_t max_move_distance_;
-  uint8_t max_still_distance_;
+  uint8_t max_gate_distance_;
+  uint8_t min_gate_distance_;
 
   uint8_t version_[6];
   uint16_t rg0_move_threshold_, rg0_still_threshold_, rg1_move_threshold_, rg1_still_threshold_,
