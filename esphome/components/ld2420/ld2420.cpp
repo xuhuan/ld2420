@@ -57,7 +57,7 @@ void LD2420Component::loop() {
 
   while (available()) {
     int ch = read();
-    ESP_LOGI(TAG,"%x",ch);
+    ESP_LOGI(TAG,"%02X",ch);
     this->readline_(ch, buffer, max_line_length);
   }
 }
