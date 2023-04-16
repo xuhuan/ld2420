@@ -11,7 +11,7 @@ static const char *const TAG = "ld2420";
 void LD2420Component::dump_config() {
   ESP_LOGCONFIG(TAG, "LD2420:");
 #ifdef USE_BINARY_SENSOR
-  LOG_BINARY_SENSOR("  ", "HasTargetSensor", this->target_binary_sensor_);
+  LOG_BINARY_SENSOR("  ", "HasPresenceSensor", this->presence_binary_sensor_);
   LOG_BINARY_SENSOR("  ", "MovingSensor", this->moving_binary_sensor_);
   LOG_BINARY_SENSOR("  ", "StillSensor", this->still_binary_sensor_);
 #endif
@@ -56,9 +56,7 @@ void LD2420Component::loop() {
   static uint8_t buffer[max_line_length];
 
   while (available()) {
-    int ch = read();
-    //ESP_LOGI(TAG,"%02X",ch);
-    this->readline_(ch, buffer, max_line_length);
+    this->readline_(read(), buffer, max_line_length);
   }
 }
 
@@ -111,12 +109,12 @@ void LD2420Component::handle_periodic_data_(uint8_t *buffer, int len) {
       0x02 = Still targets
       0x03 = Moving+Still targets
     */
-#ifdef USE_BINARY_SENSOR
-  char target_state = buffer[TARGET_STATES];
-  if (this->target_binary_sensor_ != nullptr) {
-    this->target_binary_sensor_->publish_state(target_state != 0x00);
-  }
-#endif
+// #ifdef USE_BINARY_SENSOR
+//   char target_state = buffer[TARGET_STATES];
+//   if (this->target_binary_sensor_ != nullptr) {
+//     this->target_binary_sensor_->publish_state(target_state != 0x00);
+//   }
+// #endif
 
   /*
     Reduce data update rate to prevent home assistant database size grow fast
@@ -126,14 +124,14 @@ void LD2420Component::handle_periodic_data_(uint8_t *buffer, int len) {
     return;
   last_periodic_millis = current_millis;
 
-#ifdef USE_BINARY_SENSOR
-  if (this->moving_binary_sensor_ != nullptr) {
-    this->moving_binary_sensor_->publish_state(CHECK_BIT(target_state, 0));
-  }
-  if (this->still_binary_sensor_ != nullptr) {
-    this->still_binary_sensor_->publish_state(CHECK_BIT(target_state, 1));
-  }
-#endif
+// #ifdef USE_BINARY_SENSOR
+//   if (this->moving_binary_sensor_ != nullptr) {
+//     this->moving_binary_sensor_->publish_state(CHECK_BIT(target_state, 0));
+//   }
+//   if (this->still_binary_sensor_ != nullptr) {
+//     this->still_binary_sensor_->publish_state(CHECK_BIT(target_state, 1));
+//   }
+// #endif
   /*
     Moving target distance: 10~11th bytes
     Moving target energy: 12th byte
@@ -142,44 +140,89 @@ void LD2420Component::handle_periodic_data_(uint8_t *buffer, int len) {
     Detect distance: 16~17th bytes
   */
 #ifdef USE_SENSOR
-  if (this->moving_target_distance_sensor_ != nullptr) {
-    int new_moving_target_distance = this->two_byte_to_int_(buffer[MOVING_TARGET_LOW], buffer[MOVING_TARGET_HIGH]);
-    if (this->moving_target_distance_sensor_->get_state() != new_moving_target_distance)
-      this->moving_target_distance_sensor_->publish_state(new_moving_target_distance);
-  }
-  if (this->moving_target_energy_sensor_ != nullptr) {
-    int new_moving_target_energy = buffer[MOVING_ENERGY];
-    if (this->moving_target_energy_sensor_->get_state() != new_moving_target_energy)
-      this->moving_target_energy_sensor_->publish_state(new_moving_target_energy);
-  }
-  if (this->still_target_distance_sensor_ != nullptr) {
-    int new_still_target_distance = this->two_byte_to_int_(buffer[STILL_TARGET_LOW], buffer[STILL_TARGET_HIGH]);
-    if (this->still_target_distance_sensor_->get_state() != new_still_target_distance)
-      this->still_target_distance_sensor_->publish_state(new_still_target_distance);
-  }
-  if (this->still_target_energy_sensor_ != nullptr) {
-    int new_still_target_energy = buffer[STILL_ENERGY];
-    if (this->still_target_energy_sensor_->get_state() != new_still_target_energy)
-      this->still_target_energy_sensor_->publish_state(new_still_target_energy);
-  }
-  if (this->detection_distance_sensor_ != nullptr) {
-    int new_detect_distance = this->two_byte_to_int_(buffer[DETECT_DISTANCE_LOW], buffer[DETECT_DISTANCE_HIGH]);
-    if (this->detection_distance_sensor_->get_state() != new_detect_distance)
-      this->detection_distance_sensor_->publish_state(new_detect_distance);
-  }
+  // if (this->moving_target_distance_sensor_ != nullptr) {
+  //   int new_moving_target_distance = this->two_byte_to_int_(buffer[MOVING_TARGET_LOW], buffer[MOVING_TARGET_HIGH]);
+  //   if (this->moving_target_distance_sensor_->get_state() != new_moving_target_distance)
+  //     this->moving_target_distance_sensor_->publish_state(new_moving_target_distance);
+  // }
+  // if (this->moving_target_energy_sensor_ != nullptr) {
+  //   int new_moving_target_energy = buffer[MOVING_ENERGY];
+  //   if (this->moving_target_energy_sensor_->get_state() != new_moving_target_energy)
+  //     this->moving_target_energy_sensor_->publish_state(new_moving_target_energy);
+  // }
+  // if (this->still_target_distance_sensor_ != nullptr) {
+  //   int new_still_target_distance = this->two_byte_to_int_(buffer[STILL_TARGET_LOW], buffer[STILL_TARGET_HIGH]);
+  //   if (this->still_target_distance_sensor_->get_state() != new_still_target_distance)
+  //     this->still_target_distance_sensor_->publish_state(new_still_target_distance);
+  // }
+  // if (this->still_target_energy_sensor_ != nullptr) {
+  //   int new_still_target_energy = buffer[STILL_ENERGY];
+  //   if (this->still_target_energy_sensor_->get_state() != new_still_target_energy)
+  //     this->still_target_energy_sensor_->publish_state(new_still_target_energy);
+  // }
+  // if (this->detection_distance_sensor_ != nullptr) {
+  //   int new_detect_distance = this->two_byte_to_int_(buffer[DETECT_DISTANCE_LOW], buffer[DETECT_DISTANCE_HIGH]);
+  //   if (this->detection_distance_sensor_->get_state() != new_detect_distance)
+  //     this->detection_distance_sensor_->publish_state(new_detect_distance);
+  // }
 #endif
 }
 
 
-void LD2420Component::handle_normal_mode_(uint8_t *buffer, int len) {
-  const char *p = (const char *)buffer;
-  ESP_LOGV(TAG, "Handling Normal Mode Text");
-  if ((p[0] == 0x4F) && (p[0] == 0x4E)) { // "ON"
-    char ** pEnd;
-    int range_val = strtoul(p,pEnd,10);
-       ESP_LOGI(TAG, "Range %d", range_val);
-     }
-     return;
+void LD2420Component::handle_normal_mode_(uint8_t *inbuf, int len) {
+  const uint8_t bufsize = 16;
+  uint8_t index = 0;
+  uint8_t pos = 0;
+  uint8_t range = 0;
+  bool present;
+  char* endptr;
+  char outbuf[bufsize];
+  while (true) {
+    if (inbuf[pos] >= '0' && inbuf[pos] <='9') {
+      if (index < bufsize - 1) {
+        outbuf[index++] = inbuf[pos];
+        pos++;
+      }
+    } else {
+      if (pos < len - 1) {
+        pos++;
+      } else {
+        break;
+      }
+    }
+    if (inbuf[pos - 2] == 'O' && inbuf[pos - 1] == 'F' && inbuf[pos] == 'F') {
+      set_object_presence_(false);
+      break;
+    }
+    if (inbuf[pos - 1] == 'O' && inbuf[pos] == 'N' ) {
+      set_object_presence_(true);
+      break;
+    }
+  }
+  outbuf[index] = '\0';
+  if (index > 0) this->set_object_range_(strtol(outbuf,&endptr,10));
+
+  /*
+    Reduce data update rate to prevent home assistant database size grow fast
+  */
+  int32_t current_millis = millis();
+  if (current_millis - last_normal_periodic_millis < 1000)
+    return;
+  last_normal_periodic_millis = current_millis;
+
+
+#ifdef USE_BINARY_SENSOR
+  if (this->presence_binary_sensor_ != nullptr) {
+      this->presence_binary_sensor_->publish_state(this->presence_);
+  }
+#endif
+#ifdef USE_SENSOR
+  if (this->moving_target_distance_sensor_ != nullptr) {
+    int new_moving_target_distance = this->object_range_;
+    if (this->moving_target_distance_sensor_->get_state() != new_moving_target_distance)
+      this->moving_target_distance_sensor_->publish_state(new_moving_target_distance);
+  }
+#endif
 }
 
 
@@ -269,17 +312,14 @@ void LD2420Component::readline_(int readch, uint8_t *buffer, int len) {
         ESP_LOGV(TAG, "Will handle Periodic Data");
         this->handle_periodic_data_(buffer, pos);
         pos = 0;  // Reset position index ready for next time
-      } else if (buffer[pos - 4] == 0x04 && buffer[pos - 3] == 0x03 && buffer[pos - 2] == 0x02 &&
-                 buffer[pos - 1] == 0x01) {
+      } else if (buffer[pos - 4] == 0x04 && buffer[pos - 3] == 0x03 && buffer[pos - 2] == 0x02 && buffer[pos - 1] == 0x01) {
         ESP_LOGV(TAG, "Will handle ACK Data");
         this->handle_ack_data_(buffer, pos);
         pos = 0;  // Reset position index ready for next time
-      }
-    }
-    if (buffer[pos] == 0x4F || buffer[pos] == 0x52) {
-        ESP_LOGV(TAG, "Normal mode data");
+      } else if (buffer[pos - 2] == 0x0D && buffer[pos - 1] == 0x0A) {
         this->handle_normal_mode_(buffer, pos);
         pos = 0;  // Reset position index ready for next time
+      }
     }
   }
 }

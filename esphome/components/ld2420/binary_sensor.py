@@ -5,13 +5,13 @@ from esphome.const import DEVICE_CLASS_MOTION, DEVICE_CLASS_OCCUPANCY
 from . import CONF_LD2420_ID, LD2420Component
 
 DEPENDENCIES = ["ld2420"]
-CONF_HAS_TARGET = "has_target"
+CONF_HAS_PRESENCE = "has_presence"
 CONF_HAS_MOVING_TARGET = "has_moving_target"
 CONF_HAS_STILL_TARGET = "has_still_target"
 
 CONFIG_SCHEMA = {
     cv.GenerateID(CONF_LD2420_ID): cv.use_id(LD2420Component),
-    cv.Optional(CONF_HAS_TARGET): binary_sensor.binary_sensor_schema(
+    cv.Optional(CONF_HAS_PRESENCE): binary_sensor.binary_sensor_schema(
         device_class=DEVICE_CLASS_OCCUPANCY
     ),
     cv.Optional(CONF_HAS_MOVING_TARGET): binary_sensor.binary_sensor_schema(
@@ -25,9 +25,9 @@ CONFIG_SCHEMA = {
 
 async def to_code(config):
     ld2420_component = await cg.get_variable(config[CONF_LD2420_ID])
-    if CONF_HAS_TARGET in config:
-        sens = await binary_sensor.new_binary_sensor(config[CONF_HAS_TARGET])
-        cg.add(ld2420_component.set_target_sensor(sens))
+    if CONF_HAS_PRESENCE in config:
+        sens = await binary_sensor.new_binary_sensor(config[CONF_HAS_PRESENCE])
+        cg.add(ld2420_component.set_presence_sensor(sens))
     if CONF_HAS_MOVING_TARGET in config:
         sens = await binary_sensor.new_binary_sensor(config[CONF_HAS_MOVING_TARGET])
         cg.add(ld2420_component.set_moving_target_sensor(sens))

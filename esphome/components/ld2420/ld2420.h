@@ -86,11 +86,12 @@ class LD2420Component : public Component, public uart::UARTDevice {
   void loop() override;
 
 #ifdef USE_BINARY_SENSOR
-  void set_target_sensor(binary_sensor::BinarySensor *sens) { this->target_binary_sensor_ = sens; };
+  void set_presence_sensor(binary_sensor::BinarySensor *sens) { this->presence_binary_sensor_ = sens; };
   void set_moving_target_sensor(binary_sensor::BinarySensor *sens) { this->moving_binary_sensor_ = sens; };
   void set_still_target_sensor(binary_sensor::BinarySensor *sens) { this->still_binary_sensor_ = sens; };
 #endif
-
+  void set_object_range_(uint16_t range) {this->object_range_ = range; };
+  void set_object_presence_(bool presence) {this->presence_ = presence; };
   void set_timeout(uint16_t value) { this->timeout_ = value; };
   void set_max_gate(uint8_t value) { this->max_gate_distance_ = value; };
   void set_min_gate(uint8_t value) { this->min_gate_distance_ = value; };
@@ -140,10 +141,12 @@ class LD2420Component : public Component, public uart::UARTDevice {
   int still_sensitivities[9] = {0};
 
   int32_t last_periodic_millis = millis();
+  int32_t last_normal_periodic_millis = millis();
+
 
  protected:
 #ifdef USE_BINARY_SENSOR
-  binary_sensor::BinarySensor *target_binary_sensor_{nullptr};
+  binary_sensor::BinarySensor *presence_binary_sensor_{nullptr};
   binary_sensor::BinarySensor *moving_binary_sensor_{nullptr};
   binary_sensor::BinarySensor *still_binary_sensor_{nullptr};
 #endif
@@ -166,6 +169,8 @@ class LD2420Component : public Component, public uart::UARTDevice {
   uint16_t timeout_;
   uint8_t max_gate_distance_;
   uint8_t min_gate_distance_;
+  uint16_t object_range_;
+  bool presence_;
 
   uint8_t version_[6];
   uint16_t rg0_move_threshold_, rg0_still_threshold_, rg1_move_threshold_, rg1_still_threshold_,
