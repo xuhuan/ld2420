@@ -17,28 +17,37 @@ namespace ld2420 {
 #define CHECK_BIT(var, pos) (((var) >> (pos)) & 1)
 
 // Commands
-static const uint8_t CMD_ENABLE_CONF = 0x00FF;
-static const uint8_t CMD_DISABLE_CONF = 0x00FE;
-static const uint8_t CMD_WRITE_REGISTERS = 0x0007;
-static const uint8_t CMD_READ_REGISTERS = 0x0008;
-static const uint8_t CMD_UNKNOWN1 = 0x0012;
+static const uint16_t CMD_ENABLE_CONF = 0x00FF;
+static const uint16_t CMD_DISABLE_CONF = 0x00FE;
+static const uint16_t CMD_WRITE_REGISTERS = 0x0007;
+static const uint16_t CMD_READ_REGISTERS = 0x0008;
+static const uint16_t CMD_UNKNOWN1 = 0x0012;
 
-static const uint8_t CMD_MAXDIST_DURATION = 0x0060;
-static const uint8_t CMD_QUERY = 0x0061;
-static const uint8_t CMD_ENGINEERING_MODE = 0x0062;
-static const uint8_t CMD_NORMAL_MODE = 0x0063;
-static const uint8_t CMD_GATE_SENS = 0x0064;
-static const uint8_t CMD_VERSION = 0x00A0;
-static const uint8_t CMD_BAUD_RATE = 0x00A1;  // 0x0001-0x0008 9600 .. doubles on increment up to 460800
-static const uint8_t CMD_FACTORY_RESET = 0x00A2;
-static const uint8_t CMD_RESTART = 0x00A3;
+static const uint16_t CMD_MAXDIST_DURATION = 0x0060;
+static const uint16_t CMD_QUERY = 0x0061;
+static const uint16_t CMD_ENGINEERING_MODE = 0x0062;
+static const uint16_t CMD_NORMAL_MODE = 0x0063;
+static const uint16_t CMD_GATE_SENS = 0x0064;
+static const uint16_t CMD_VERSION = 0x00A0;
+static const uint16_t CMD_BAUD_RATE = 0x00A1;  // 0x0001-0x0008 9600 .. doubles on increment up to 460800
+static const uint16_t CMD_FACTORY_RESET = 0x00A2;
+static const uint16_t CMD_RESTART = 0x00A3;
 
 
 
-// Commands values
-static const uint8_t CMD_MAX_MOVE_VALUE = 0x0000;
-static const uint8_t CMD_MAX_STILL_VALUE = 0x0001;
-static const uint8_t CMD_DURATION_VALUE = 0x0002;
+// Register address values
+static const uint16_t CMD_MAX_GATE_REG =  0x0000;
+static const uint16_t CMD_MIN_GATE_REG =  0x0001;
+static const uint16_t CMD_TIMEOUT_REG =   0x0002;
+static const uint16_t CMD_MOVE_GATE[16] =  {0x0010, 0x0011, 0x0012, 0x0013,
+                                            0x0014, 0x0015, 0x0016, 0x0017,
+                                            0x0018, 0x0019, 0x001A, 0x001B,
+                                            0x001C, 0x001D, 0x001E, 0x001F};
+static const uint16_t CMD_STILL_GATE[16] = {0x0020, 0x0021, 0x0022, 0x0023,
+                                            0x0024, 0x0025, 0x0026, 0x0027,
+                                            0x0028, 0x0029, 0x002A, 0x002B,
+                                            0x002C, 0x002D, 0x002E, 0x002F};
+
 // Command Header & Footer
 static const uint8_t CMD_FRAME_HEADER[4] = {0xFD, 0xFC, 0xFB, 0xFA};
 static const uint8_t CMD_FRAME_END[4] = {0x04, 0x03, 0x02, 0x01};
@@ -66,9 +75,10 @@ enum PeriodicDataStructure : uint8_t {
   DETECT_DISTANCE_LOW = 15,
   DETECT_DISTANCE_HIGH = 16,
 };
-enum PeriodicDataValue : uint8_t { HEAD = 0XAA, END = 0x55, CHECK = 0x00 };
-
+enum PeriodicDataValue : uint8_t { HEAD = 0xAA, END = 0x55, CHECK = 0x00 };
 enum AckDataStructure : uint8_t { COMMAND = 6, COMMAND_STATUS = 7 };
+
+enum MoveGateRegAddress : uint8_t { GATE1 = 0x0A, GATE2 = 0x0B };
 
 //  char cmd[2] = {enable ? 0xFF : 0xFE, 0x00};
 class LD2420Component : public Component, public uart::UARTDevice {
@@ -157,6 +167,8 @@ class LD2420Component : public Component, public uart::UARTDevice {
 
   void set_max_distances_timeout_(uint8_t max_moving_distance_range, uint8_t max_still_distance_range,
                                   uint16_t timeout);
+  void set_min_max_distances_timeout_(uint8_t max_gate_distance, uint8_t min_gate_distance, uint16_t timeout);
+  void set_gate_thresholds_(uint8_t gate, uint16_t move_sens, uint16_t still_sens);
   void set_gate_threshold_(uint8_t gate, uint16_t motionsens, uint16_t stillsens);
   void set_config_mode_(bool enable);
   void handle_periodic_data_(uint8_t *buffer, int len);

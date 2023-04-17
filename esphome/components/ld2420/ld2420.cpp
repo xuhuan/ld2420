@@ -3,6 +3,11 @@
 #define highbyte(val) (uint8_t)((val) >> 8)
 #define lowbyte(val) (uint8_t)((val) &0xff)
 
+#define byte0(val) (uint8_t)((val) &0xFF)
+#define byte1(val) (uint8_t)((val) >>  8)
+#define byte2(val) (uint8_t)((val) >> 16)
+#define byte3(val) (uint8_t)((val) >> 24)
+
 namespace esphome {
 namespace ld2420 {
 
@@ -32,7 +37,7 @@ void LD2420Component::dump_config() {
 void LD2420Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up LD2420...");
   this->set_config_mode_(true);
-  this->set_max_distances_timeout_(this->max_gate_distance_, this->min_gate_distance_, this->timeout_);
+  this->set_min_max_distances_timeout_(this->max_gate_distance_, this->min_gate_distance_, this->timeout_);
   // Configure Gates sensitivity
   this->set_gate_threshold_(0, this->rg0_move_threshold_, this->rg0_still_threshold_);
   //this->set_gate_threshold_(1, this->rg1_move_threshold_, this->rg1_still_threshold_);
@@ -333,6 +338,59 @@ void LD2420Component::set_config_mode_(bool enable) {
 void LD2420Component::query_parameters_() { this->send_command_(CMD_QUERY, nullptr, 0); }
 void LD2420Component::get_version_() { this->send_command_(CMD_VERSION, nullptr, 0); }
 
+void LD2420Component::set_min_max_distances_timeout_(uint8_t max_gate_distance, uint8_t min_gate_distance, uint16_t timeout) {
+
+  // Header H, Length L, Register R, Value V, Fotter F
+  // HH HH HH HH LL LL CC CC RR RR VV VV VV VV RR RR VV VV VV VV RR RR VV VV VV VV FF FF FF FF
+  // FD FC FB FA 14 00 07 00 00 00 00 00 00 00 01 00 0F 00 00 00 02 00 0A 00 00 00 04 03 02 01 e.g.
+  // Created here            XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX
+
+  uint8_t record[18] = {  0x00, //register L
+                          0x00, //register H
+                          min_gate_distance,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x01, //register L
+                          0x00, //register H
+                          max_gate_distance,
+                          0x00,
+                          0x00,
+                          0x00,
+                          0x02, //register L
+                          0x00, //register H
+                          lowbyte(timeout),
+                          highbyte(timeout),
+                          0x00,
+                          0x00};
+  this->send_command_(CMD_WRITE_REGISTERS, record, 18);
+}
+
+void LD2420Component::set_gate_thresholds_(uint8_t gate, uint16_t move_sens, uint16_t still_sens) {
+
+  // Header H, Length L, Register R, Value V, Fotter F
+  // HH HH HH HH LL LL CC CC RR RR VV VV VV VV RR RR VV VV VV VV RR RR VV VV VV VV FF FF FF FF
+  // FD FC FB FA 14 00 07 00 00 00 00 00 00 00 01 00 0F 00 00 00 02 00 0A 00 00 00 04 03 02 01 e.g.
+  // Created here            XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX
+
+  int move_gate = CMD_MOVE_GATE[gate];
+  int still_gate = CMD_STILL_GATE[gate];
+
+  uint8_t record[18] = {  lowbyte(move_gate),
+                          highbyte(move_gate),
+                          lowbyte(move_sens),
+                          highbyte(move_sens),
+                          0x00,
+                          0x00,
+                          lowbyte(still_gate),
+                          highbyte(still_gate),
+                          lowbyte(still_sens),
+                          highbyte(still_sens),
+                          0x00,
+                          0x00};
+  this->send_command_(CMD_WRITE_REGISTERS, record, 18);
+
+}
 void LD2420Component::set_max_distances_timeout_(uint8_t max_moving_distance_range, uint8_t max_still_distance_range,
                                                  uint16_t timeout) {
   uint8_t value[18] = {0x00,
@@ -356,6 +414,7 @@ void LD2420Component::set_max_distances_timeout_(uint8_t max_moving_distance_ran
   this->send_command_(CMD_MAXDIST_DURATION, value, 18);
   this->query_parameters_();
 }
+
 void LD2420Component::set_gate_threshold_(uint8_t gate, uint16_t motionsens, uint16_t stillsens) {
   // reference
   // https://drive.google.com/drive/folders/1p4dhbEJA3YubyIjIIC7wwVsSo8x29Fq-?spm=a2g0o.detail.1000023.17.93465697yFwVxH
