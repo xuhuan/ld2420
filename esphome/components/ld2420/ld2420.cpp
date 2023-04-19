@@ -218,9 +218,12 @@ void LD2420Component::handle_normal_mode_(uint8_t *inbuf, int len) {
 
 #ifdef USE_BINARY_SENSOR
   if (this->presence_binary_sensor_ != nullptr) {
+      if (this->presence_binary_sensor_->state != this->presence_) {
       this->presence_binary_sensor_->publish_state(this->presence_);
+    }
   }
 #endif
+
 #ifdef USE_SENSOR
   if (this->moving_target_distance_sensor_ != nullptr) {
     int new_moving_target_distance = this->object_range_;
