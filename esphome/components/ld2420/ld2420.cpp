@@ -37,9 +37,9 @@ void LD2420Component::dump_config() {
 void LD2420Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up LD2420...");
   this->set_config_mode_(true);
-  this->set_min_max_distances_timeout_(this->max_gate_distance_, this->min_gate_distance_, this->timeout_);
+  //this->set_min_max_distances_timeout_(this->max_gate_distance_, this->min_gate_distance_, this->timeout_);
   // Configure Gates sensitivity
-  this->set_gate_threshold_(0, this->rg0_move_threshold_, this->rg0_still_threshold_);
+  //this->set_gate_threshold_(0, this->rg0_move_threshold_, this->rg0_still_threshold_);
   //this->set_gate_threshold_(1, this->rg1_move_threshold_, this->rg1_still_threshold_);
   //this->set_gate_threshold_(2, this->rg2_move_threshold_, this->rg2_still_threshold_);
   //this->set_gate_threshold_(3, this->rg3_move_threshold_, this->rg3_still_threshold_);
@@ -69,7 +69,7 @@ void LD2420Component::send_command_(uint8_t command, uint8_t *command_value, int
   // lastCommandSuccess->publish_state(false);
 
   // frame start bytes
-  this->write_array(CMD_FRAME_HEADER, 4);
+  this->write_array(CMD_FRAME_HEADER_OLD, 4);
   // length bytes
   int len = 2;
   if (command_value != nullptr)
@@ -90,7 +90,7 @@ void LD2420Component::send_command_(uint8_t command, uint8_t *command_value, int
   // frame end bytes
   this->write_array(CMD_FRAME_END, 4);
   // FIXME to remove
-  delay(50);  // NOLINT
+  //delay(50);  // NOLINT
 }
 
 void LD2420Component::handle_periodic_data_(uint8_t *buffer, int len) {
@@ -260,7 +260,7 @@ void LD2420Component::handle_ack_data_(uint8_t *buffer, int len) {
     case lowbyte(CMD_DISABLE_CONF):
       ESP_LOGV(TAG, "Handled Disabled conf command");
       break;
-    case lowbyte(CMD_VERSION):
+    case lowbyte(CMD_READ_VERSION):
       ESP_LOGV(TAG, "FW Version is: %u.%u.%u%u%u%u", buffer[13], buffer[12], buffer[17], buffer[16], buffer[15],
                buffer[14]);
       this->version_[0] = buffer[13];
@@ -332,14 +332,48 @@ void LD2420Component::readline_(int readch, uint8_t *buffer, int len) {
   }
 }
 
+void LD2420Component::build_cmd_array_(uint8_t* cmdArray, cmd_frame frame) {
+  frame.length = 0;
+  uint16_t data_length = frame.elements * 2;
+  memcpy(&cmdArray[frame.length], &frame.header, sizeof(frame.header));
+  frame.length += sizeof(frame.header);
+  memcpy(&cmdArray[frame.length], &data_length, sizeof(data_length));
+  frame.length += sizeof(data_length);
+  memcpy(cmdArray + frame.length, &frame.command, sizeof(frame.command));
+  frame.length += sizeof(frame.command);
+  if (frame.elements > 0) {
+    for (uint8_t index; index < frame.elements; index++) {
+      memcpy(cmdArray + frame.length, &frame.data[index], sizeof(frame.data[index]));
+      frame.length += sizeof(frame.data[index]);
+    }
+  }
+  memcpy(cmdArray + frame.length, &frame.footer, sizeof(frame.footer));
+  frame.length += sizeof(frame.footer);
+  for (uint8_t index; index < frame.length; index++) {
+    this->write_byte(cmdArray[index]);
+  }
+}
+
 void LD2420Component::set_config_mode_(bool enable) {
-  uint8_t cmd = enable ? CMD_ENABLE_CONF : CMD_DISABLE_CONF;
-  uint8_t cmd_value[2] = {0x01, 0x00};
-  this->send_command_(cmd, enable ? cmd_value : nullptr, 2);
+  uint8_t cmdArray[128];
+  uint8_t count;
+  cmd_frame frame;
+  frame.header =  CMD_FRAME_HEADER;
+  frame.command = enable ? CMD_ENABLE_CONF : CMD_DISABLE_CONF;
+  if (enable) {
+    frame.data[0] = { CMD_PROTOCOL_VER };
+    frame.elements++;
+  }
+  frame.footer = CMD_FRAME_FOOTER;
+  build_cmd_array_(cmdArray, frame);
+
+  //this->write_array((byte*)&frame.header, sizeof(&frame.header));
+  //ESP_LOGI(TAG,"Data sent %X",&frame.header);
+
 }
 
 void LD2420Component::query_parameters_() { this->send_command_(CMD_QUERY, nullptr, 0); }
-void LD2420Component::get_version_() { this->send_command_(CMD_VERSION, nullptr, 0); }
+void LD2420Component::get_version_() { this->send_command_(CMD_READ_VERSION, nullptr, 0); }
 
 void LD2420Component::set_min_max_distances_timeout_(uint8_t max_gate_distance, uint8_t min_gate_distance, uint16_t timeout) {
 
@@ -366,7 +400,7 @@ void LD2420Component::set_min_max_distances_timeout_(uint8_t max_gate_distance, 
                           highbyte(timeout),
                           0x00,
                           0x00};
-  this->send_command_(CMD_WRITE_REGISTERS, record, 18);
+  this->send_command_(CMD_WRITE_REGISTER, record, 18);
 }
 
 void LD2420Component::set_gate_thresholds_(uint8_t gate, uint16_t move_sens, uint16_t still_sens) {
@@ -391,7 +425,7 @@ void LD2420Component::set_gate_thresholds_(uint8_t gate, uint16_t move_sens, uin
                           highbyte(still_sens),
                           0x00,
                           0x00};
-  this->send_command_(CMD_WRITE_REGISTERS, record, 18);
+  this->send_command_(CMD_WRITE_REGISTER, record, 18);
 
 }
 void LD2420Component::set_max_distances_timeout_(uint8_t max_moving_distance_range, uint8_t max_still_distance_range,

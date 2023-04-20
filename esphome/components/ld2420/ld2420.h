@@ -17,18 +17,24 @@ namespace ld2420 {
 #define CHECK_BIT(var, pos) (((var) >> (pos)) & 1)
 
 // Commands
+static const uint16_t CMD_PROTOCOL_VER = 0x0001;
 static const uint16_t CMD_ENABLE_CONF = 0x00FF;
 static const uint16_t CMD_DISABLE_CONF = 0x00FE;
-static const uint16_t CMD_WRITE_REGISTERS = 0x0007;
-static const uint16_t CMD_READ_REGISTERS = 0x0008;
-static const uint16_t CMD_UNKNOWN1 = 0x0012;
+static const uint16_t CMD_READ_VERSION = 0x0000;
+static const uint16_t CMD_WRITE_REGISTER = 0x0001;
+static const uint16_t CMD_READ_REGISTER = 0x0002;
+static const uint16_t CMD_WRITE_ABD_PARAM = 0x0007;
+static const uint16_t CMD_READ_ABD_PARAM = 0x0008;
+static const uint16_t CMD_WRITE_SYS_PARAM = 0x00012;
+static const uint16_t CMD_READ_SYS_PARAM = 0x0013;
+static const uint16_t CMD_READ_SERIAL_NUM = 0x0011;
 
 static const uint16_t CMD_MAXDIST_DURATION = 0x0060;
 static const uint16_t CMD_QUERY = 0x0061;
 static const uint16_t CMD_ENGINEERING_MODE = 0x0062;
 static const uint16_t CMD_NORMAL_MODE = 0x0063;
 static const uint16_t CMD_GATE_SENS = 0x0064;
-static const uint16_t CMD_VERSION = 0x00A0;
+
 static const uint16_t CMD_BAUD_RATE = 0x00A1;  // 0x0001-0x0008 9600 .. doubles on increment up to 460800
 static const uint16_t CMD_FACTORY_RESET = 0x00A2;
 static const uint16_t CMD_RESTART = 0x00A3;
@@ -49,7 +55,9 @@ static const uint16_t CMD_STILL_GATE[16] = {0x0020, 0x0021, 0x0022, 0x0023,
                                             0x002C, 0x002D, 0x002E, 0x002F};
 
 // Command Header & Footer
-static const uint8_t CMD_FRAME_HEADER[4] = {0xFD, 0xFC, 0xFB, 0xFA};
+static const uint32_t CMD_FRAME_HEADER = 0xFAFBFCFD;
+static const uint32_t CMD_FRAME_FOOTER = 0x01020304;
+static const uint8_t CMD_FRAME_HEADER_OLD[4] = {0xFD, 0xFC, 0xFB, 0xFA};
 static const uint8_t CMD_FRAME_END[4] = {0x04, 0x03, 0x02, 0x01};
 // Data Header & Footer
 static const uint8_t DATA_FRAME_HEADER[4] = {0xF4, 0xF3, 0xF2, 0xF1};
@@ -90,16 +98,32 @@ class LD2420Component : public Component, public uart::UARTDevice {
   SUB_SENSOR(detection_distance)
 #endif
 
- public:
+public:
   void setup() override;
   void dump_config() override;
   void loop() override;
+
+  // struct cmd_data {
+  //   uint16_t data[4];  // Keep it short 4-8 elements makes sence
+  //   uint8_t count;
+  // };
+
+  struct cmd_frame {
+    uint32_t header;
+    uint16_t length;
+    uint16_t command;
+    uint16_t data[4];
+    uint8_t elements;
+    uint32_t footer;
+    uint8_t type;
+  };
 
 #ifdef USE_BINARY_SENSOR
   void set_presence_sensor(binary_sensor::BinarySensor *sens) { this->presence_binary_sensor_ = sens; };
   void set_moving_target_sensor(binary_sensor::BinarySensor *sens) { this->moving_binary_sensor_ = sens; };
   void set_still_target_sensor(binary_sensor::BinarySensor *sens) { this->still_binary_sensor_ = sens; };
 #endif
+  void build_cmd_array_(uint8_t* cmdArray, cmd_frame);
   void set_object_range_(uint16_t range) {this->object_range_ = range; };
   void set_object_presence_(bool presence) {this->presence_ = presence; };
   void set_timeout(uint16_t value) { this->timeout_ = value; };
@@ -164,7 +188,6 @@ class LD2420Component : public Component, public uart::UARTDevice {
   std::vector<uint8_t> rx_buffer_;
   int two_byte_to_int_(char firstbyte, char secondbyte) { return (int16_t) (secondbyte << 8) + firstbyte; }
   void send_command_(uint8_t command_str, uint8_t *command_value, int command_value_len);
-
   void set_max_distances_timeout_(uint8_t max_moving_distance_range, uint8_t max_still_distance_range,
                                   uint16_t timeout);
   void set_min_max_distances_timeout_(uint8_t max_gate_distance, uint8_t min_gate_distance, uint16_t timeout);
