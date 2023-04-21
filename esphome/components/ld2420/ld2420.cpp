@@ -28,31 +28,35 @@ void LD2420Component::dump_config() {
   LOG_SENSOR("  ", "Detection Distance", this->detection_distance_sensor_);
 #endif
   this->set_config_mode_(true);
-  this->get_version_();
+  this->get_firmware_version_();
   this->set_config_mode_(false);
-  ESP_LOGCONFIG(TAG, "  Firmware Version : %u.%u.%u%u%u%u", this->version_[0], this->version_[1], this->version_[2],
-                this->version_[3], this->version_[4], this->version_[5]);
+  ESP_LOGCONFIG(TAG, "  Firmware Version : %7s",this->ld2420_firmware_ver_);
 }
 
 void LD2420Component::setup() {
   ESP_LOGCONFIG(TAG, "Setting up LD2420...");
   this->set_config_mode_(true);
-  //this->set_min_max_distances_timeout_(this->max_gate_distance_, this->min_gate_distance_, this->timeout_);
+  this->get_firmware_version_();
+  this->set_min_max_distances_timeout_(this->max_gate_distance_, this->min_gate_distance_, this->timeout_);
   // Configure Gates sensitivity
-  //this->set_gate_threshold_(0, this->rg0_move_threshold_, this->rg0_still_threshold_);
-  //this->set_gate_threshold_(1, this->rg1_move_threshold_, this->rg1_still_threshold_);
-  //this->set_gate_threshold_(2, this->rg2_move_threshold_, this->rg2_still_threshold_);
-  //this->set_gate_threshold_(3, this->rg3_move_threshold_, this->rg3_still_threshold_);
-  //this->set_gate_threshold_(4, this->rg4_move_threshold_, this->rg4_still_threshold_);
-  //this->set_gate_threshold_(5, this->rg5_move_threshold_, this->rg5_still_threshold_);
-  //this->set_gate_threshold_(6, this->rg6_move_threshold_, this->rg6_still_threshold_);
-  //this->set_gate_threshold_(7, this->rg7_move_threshold_, this->rg7_still_threshold_);
-  //this->set_gate_threshold_(8, this->rg8_move_threshold_, this->rg8_still_threshold_);
-  this->get_version_();
+  this->set_gate_thresholds_(0, this->rg0_move_threshold_, this->rg0_still_threshold_);
+  this->set_gate_thresholds_(1, this->rg1_move_threshold_, this->rg1_still_threshold_);
+  this->set_gate_thresholds_(2, this->rg2_move_threshold_, this->rg2_still_threshold_);
+  this->set_gate_thresholds_(3, this->rg3_move_threshold_, this->rg3_still_threshold_);
+  this->set_gate_thresholds_(4, this->rg4_move_threshold_, this->rg4_still_threshold_);
+  this->set_gate_thresholds_(5, this->rg5_move_threshold_, this->rg5_still_threshold_);
+  this->set_gate_thresholds_(6, this->rg6_move_threshold_, this->rg6_still_threshold_);
+  this->set_gate_thresholds_(7, this->rg7_move_threshold_, this->rg7_still_threshold_);
+  this->set_gate_thresholds_(8, this->rg8_move_threshold_, this->rg8_still_threshold_);
+  this->set_gate_thresholds_(9, this->rg9_move_threshold_, this->rg9_still_threshold_);
+  this->set_gate_thresholds_(10, this->rg10_move_threshold_, this->rg10_still_threshold_);
+  this->set_gate_thresholds_(11, this->rg11_move_threshold_, this->rg11_still_threshold_);
+  this->set_gate_thresholds_(12, this->rg12_move_threshold_, this->rg12_still_threshold_);
+  this->set_gate_thresholds_(13, this->rg13_move_threshold_, this->rg13_still_threshold_);
+  this->set_gate_thresholds_(14, this->rg14_move_threshold_, this->rg14_still_threshold_);
+  this->set_gate_thresholds_(15, this->rg15_move_threshold_, this->rg15_still_threshold_);
   this->set_config_mode_(false);
-  //this->send_command_(CMD_ENGINEERING_MODE, nullptr, 0);
-  ESP_LOGCONFIG(TAG, "Firmware Version : %u.%u.%u%u%u%u", this->version_[0], this->version_[1], this->version_[2],
-                this->version_[3], this->version_[4], this->version_[5]);
+  ESP_LOGCONFIG(TAG, "Firmware Version : %7s",this->ld2420_firmware_ver_);
   ESP_LOGCONFIG(TAG, "LD2420 setup complete.");
 }
 
@@ -65,38 +69,11 @@ void LD2420Component::loop() {
   }
 }
 
-void LD2420Component::send_command_(uint8_t command, uint8_t *command_value, int command_value_len) {
-  // lastCommandSuccess->publish_state(false);
-
-  // frame start bytes
-  this->write_array(CMD_FRAME_HEADER_OLD, 4);
-  // length bytes
-  int len = 2;
-  if (command_value != nullptr)
-    len += command_value_len;
-  this->write_byte(lowbyte(len));
-  this->write_byte(highbyte(len));
-
-  // command
-  this->write_byte(lowbyte(command));
-  this->write_byte(highbyte(command));
-
-  // command value bytes
-  if (command_value != nullptr) {
-    for (int i = 0; i < command_value_len; i++) {
-      this->write_byte(command_value[i]);
-    }
-  }
-  // frame end bytes
-  this->write_array(CMD_FRAME_END, 4);
-  // FIXME to remove
-  //delay(50);  // NOLINT
-}
 
 void LD2420Component::handle_periodic_data_(uint8_t *buffer, int len) {
   if (len < 12)
-    return;  // 4 frame start bytes + 2 length bytes + 1 data end byte + 1 crc byte + 4 frame end bytes
-  if (buffer[0] != 0xF4 || buffer[1] != 0xF3 || buffer[2] != 0xF2 || buffer[3] != 0xF1)  // check 4 frame start bytes
+    return;  // 4 cmd_frame start bytes + 2 length bytes + 1 data end byte + 1 crc byte + 4 cmd_frame end bytes
+  if (buffer[0] != 0xF4 || buffer[1] != 0xF3 || buffer[2] != 0xF2 || buffer[3] != 0xF1)  // check 4 cmd_frame start bytes
     return;
   if (buffer[7] != HEAD || buffer[len - 6] != END || buffer[len - 5] != CHECK)  // Check constant values
     return;  // data head=0xAA, data end=0x55, crc=0x00
@@ -240,7 +217,7 @@ void LD2420Component::handle_ack_data_(uint8_t *buffer, int len) {
     ESP_LOGE(TAG, "Error with last command : incorrect length");
     return;
   }
-  if (buffer[0] != 0xFD || buffer[1] != 0xFC || buffer[2] != 0xFB || buffer[3] != 0xFA) {  // check 4 frame start bytes
+  if (buffer[0] != 0xFD || buffer[1] != 0xFC || buffer[2] != 0xFB || buffer[3] != 0xFA) {  // check 4 cmd_frame start bytes
     ESP_LOGE(TAG, "Error with last command : incorrect Header");
     return;
   }
@@ -252,6 +229,10 @@ void LD2420Component::handle_ack_data_(uint8_t *buffer, int len) {
     ESP_LOGE(TAG, "Error with last command , last buffer was: %u , %u", buffer[8], buffer[9]);
     return;
   }
+  for (int i = 0; i < len; i++) {
+    printf("%02X ", buffer[i]);
+  }
+  printf("\n");
 
   switch (buffer[COMMAND]) {
     case lowbyte(CMD_ENABLE_CONF):
@@ -261,46 +242,10 @@ void LD2420Component::handle_ack_data_(uint8_t *buffer, int len) {
       ESP_LOGV(TAG, "Handled Disabled conf command");
       break;
     case lowbyte(CMD_READ_VERSION):
-      ESP_LOGV(TAG, "FW Version is: %u.%u.%u%u%u%u", buffer[13], buffer[12], buffer[17], buffer[16], buffer[15],
-               buffer[14]);
-      this->version_[0] = buffer[13];
-      this->version_[1] = buffer[12];
-      this->version_[2] = buffer[17];
-      this->version_[3] = buffer[16];
-      this->version_[4] = buffer[15];
-      this->version_[5] = buffer[14];
-
-      break;
-    //case lowbyte(CMD_GATE_SENS):
-    //  ESP_LOGV(TAG, "Handled sensitivity command");
-    //  break;
-    case lowbyte(CMD_QUERY):  // Query parameters response
-    {
-      if (buffer[10] != 0xAA)
-        return;  // value head=0xAA
-      /*
-        Moving distance range: 13th byte
-        Still distance range: 14th byte
-      */
-      // TODO
-      // maxMovingDistanceRange->publish_state(buffer[12]);
-      // maxStillDistanceRange->publish_state(buffer[13]);
-      /*
-        Moving Sensitivities: 15~23th bytes
-        Still Sensitivities: 24~32th bytes
-      */
-      for (int i = 0; i < 9; i++) {
-        moving_sensitivities[i] = buffer[14 + i];
-      }
-      for (int i = 0; i < 9; i++) {
-        still_sensitivities[i] = buffer[23 + i];
-      }
-      /*
-        None Duration: 33~34th bytes
-      */
-      // noneDuration->publish_state(this->two_byte_to_int_(buffer[32], buffer[33]));
-    } break;
-    default:
+      memcpy(this->ld2420_firmware_ver_, &buffer[12], 6);
+      ESP_LOGI(TAG, "LD2420 module firmware: %7s",this->ld2420_firmware_ver_);
+    break;
+      default:
       break;
   }
 }
@@ -319,6 +264,7 @@ void LD2420Component::readline_(int readch, uint8_t *buffer, int len) {
       if (buffer[pos - 4] == 0xF8 && buffer[pos - 3] == 0xF7 && buffer[pos - 2] == 0xF6 && buffer[pos - 1] == 0xF5) {
         ESP_LOGV(TAG, "Will handle Periodic Data");
         this->handle_periodic_data_(buffer, pos);
+        // this->received_frame_handler_(buffer,pos);
         pos = 0;  // Reset position index ready for next time
       } else if (buffer[pos - 4] == 0x04 && buffer[pos - 3] == 0x03 && buffer[pos - 2] == 0x02 && buffer[pos - 1] == 0x01) {
         ESP_LOGV(TAG, "Will handle ACK Data");
@@ -332,17 +278,17 @@ void LD2420Component::readline_(int readch, uint8_t *buffer, int len) {
   }
 }
 
-void LD2420Component::build_cmd_array_(uint8_t* cmdArray, cmd_frame frame) {
+void LD2420Component::send_cmd_from_array_(uint8_t* cmdArray, cmd_frame_t frame) {
   frame.length = 0;
-  uint16_t data_length = frame.elements * 2;
+  frame.data_length += 2; // Add on the command byte
   memcpy(&cmdArray[frame.length], &frame.header, sizeof(frame.header));
   frame.length += sizeof(frame.header);
-  memcpy(&cmdArray[frame.length], &data_length, sizeof(data_length));
-  frame.length += sizeof(data_length);
+  memcpy(&cmdArray[frame.length], &frame.data_length, sizeof(frame.length));
+  frame.length += sizeof(frame.data_length);
   memcpy(cmdArray + frame.length, &frame.command, sizeof(frame.command));
   frame.length += sizeof(frame.command);
-  if (frame.elements > 0) {
-    for (uint8_t index; index < frame.elements; index++) {
+  if (frame.data_length > 2) { // Minimun 2 for the command byte, otherwise there is additional data
+    for (uint8_t index; index < frame.data_length - 2 ; index++) {
       memcpy(cmdArray + frame.length, &frame.data[index], sizeof(frame.data[index]));
       frame.length += sizeof(frame.data[index]);
     }
@@ -352,120 +298,103 @@ void LD2420Component::build_cmd_array_(uint8_t* cmdArray, cmd_frame frame) {
   for (uint8_t index; index < frame.length; index++) {
     this->write_byte(cmdArray[index]);
   }
+
+  for (int i = 0; i < frame.length; i++) {
+    printf("%02X ", cmdArray[i]);
+  }
+  printf("\n");
+}
+
+void LD2420Component::received_frame_handler_(uint8_t *buffer, int len) {
+//rec_frame.
 }
 
 void LD2420Component::set_config_mode_(bool enable) {
   uint8_t cmdArray[128];
-  uint8_t count;
-  cmd_frame frame;
-  frame.header =  CMD_FRAME_HEADER;
-  frame.command = enable ? CMD_ENABLE_CONF : CMD_DISABLE_CONF;
+  cmd_frame_t cmd_frame;
+  cmd_frame.data_length = 0;
+  cmd_frame.header =  CMD_FRAME_HEADER;
+  cmd_frame.command = enable ? CMD_ENABLE_CONF : CMD_DISABLE_CONF;
   if (enable) {
-    frame.data[0] = { CMD_PROTOCOL_VER };
-    frame.elements++;
+    memcpy(&cmd_frame.data[0], &CMD_PROTOCOL_VER, sizeof(CMD_PROTOCOL_VER));
+    cmd_frame.data_length += sizeof(CMD_PROTOCOL_VER);
   }
-  frame.footer = CMD_FRAME_FOOTER;
-  build_cmd_array_(cmdArray, frame);
-
-  //this->write_array((byte*)&frame.header, sizeof(&frame.header));
-  //ESP_LOGI(TAG,"Data sent %X",&frame.header);
-
+  cmd_frame.footer = CMD_FRAME_FOOTER;
+  ESP_LOGV(TAG,"Sending set config mode command: %2X",cmd_frame.command);
+  send_cmd_from_array_(cmdArray, cmd_frame);
 }
 
-void LD2420Component::query_parameters_() { this->send_command_(CMD_QUERY, nullptr, 0); }
-void LD2420Component::get_version_() { this->send_command_(CMD_READ_VERSION, nullptr, 0); }
+void LD2420Component::get_firmware_version_(void) {
+  uint8_t cmdArray[128];
+  cmd_frame_t cmd_frame;
+  cmd_frame.data_length = 0;
+  cmd_frame.header =  CMD_FRAME_HEADER;
+  cmd_frame.command = CMD_READ_VERSION;
+  cmd_frame.footer = CMD_FRAME_FOOTER;
 
-void LD2420Component::set_min_max_distances_timeout_(uint8_t max_gate_distance, uint8_t min_gate_distance, uint16_t timeout) {
+  ESP_LOGV(TAG,"Sending get firmware version command: %2X",cmd_frame.command);
+  send_cmd_from_array_(cmdArray, cmd_frame);
+}
 
-  // Header H, Length L, Register R, Value V, Fotter F
+void LD2420Component::set_min_max_distances_timeout_(uint32_t max_gate_distance, uint32_t min_gate_distance, uint32_t timeout) {
+
+  // Header H, Length L, Register R, Value V, Footer F
   // HH HH HH HH LL LL CC CC RR RR VV VV VV VV RR RR VV VV VV VV RR RR VV VV VV VV FF FF FF FF
   // FD FC FB FA 14 00 07 00 00 00 00 00 00 00 01 00 0F 00 00 00 02 00 0A 00 00 00 04 03 02 01 e.g.
-  // Created here            XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX
 
-  uint8_t record[18] = {  0x00, //register L
-                          0x00, //register H
-                          min_gate_distance,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x01, //register L
-                          0x00, //register H
-                          max_gate_distance,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x02, //register L
-                          0x00, //register H
-                          lowbyte(timeout),
-                          highbyte(timeout),
-                          0x00,
-                          0x00};
-  this->send_command_(CMD_WRITE_REGISTER, record, 18);
+  uint8_t cmdArray[128];
+  cmd_frame_t reg_frame;
+  reg_frame.data_length = 0;
+  reg_frame.header = CMD_FRAME_HEADER;
+  reg_frame.command = CMD_WRITE_ABD_PARAM;
+  memcpy(&reg_frame.data[reg_frame.data_length], &CMD_MAX_GATE_REG, sizeof(CMD_MAX_GATE_REG)); // Register: global max detect gate number
+  reg_frame.data_length += sizeof(CMD_MAX_GATE_REG);
+  memcpy(&reg_frame.data[reg_frame.data_length], &max_gate_distance, sizeof(max_gate_distance));
+  reg_frame.data_length += sizeof(max_gate_distance);
+  memcpy(&reg_frame.data[reg_frame.data_length], &CMD_MIN_GATE_REG, sizeof(CMD_MIN_GATE_REG)); // Register: global min detect gate number
+  reg_frame.data_length += sizeof(CMD_MIN_GATE_REG);
+  memcpy(&reg_frame.data[reg_frame.data_length], &min_gate_distance, sizeof(min_gate_distance));
+  reg_frame.data_length += sizeof(min_gate_distance);
+  memcpy(&reg_frame.data[reg_frame.data_length], &CMD_TIMEOUT_REG, sizeof(CMD_TIMEOUT_REG)); // Register: global delay time
+  reg_frame.data_length += sizeof(CMD_TIMEOUT_REG);
+  memcpy(&reg_frame.data[reg_frame.data_length], &timeout, sizeof(timeout));;
+  reg_frame.data_length += sizeof(timeout);
+  reg_frame.footer = CMD_FRAME_FOOTER;
+
+  ESP_LOGV(TAG,"Sending global gate detect min max and delay params: %2X",reg_frame.command);
+  send_cmd_from_array_(cmdArray, reg_frame);
+
 }
 
 void LD2420Component::set_gate_thresholds_(uint8_t gate, uint16_t move_sens, uint16_t still_sens) {
 
-  // Header H, Length L, Register R, Value V, Fotter F
+  // Header H, Length L, Register R, Value V, Footer F
   // HH HH HH HH LL LL CC CC RR RR VV VV VV VV RR RR VV VV VV VV RR RR VV VV VV VV FF FF FF FF
   // FD FC FB FA 14 00 07 00 00 00 00 00 00 00 01 00 0F 00 00 00 02 00 0A 00 00 00 04 03 02 01 e.g.
-  // Created here            XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX
 
-  int move_gate = CMD_MOVE_GATE[gate];
-  int still_gate = CMD_STILL_GATE[gate];
+  uint16_t move_gate = CMD_MOVE_GATE[gate];
+  uint16_t still_gate = CMD_STILL_GATE[gate];
+  uint8_t cmdArray[128];
+  cmd_frame_t reg_frame;
+  reg_frame.data_length = 0;
+  reg_frame.header = CMD_FRAME_HEADER;
+  reg_frame.command = CMD_WRITE_ABD_PARAM;
+  memcpy(&reg_frame.data[reg_frame.data_length], &CMD_PARM_HIGH_TRESH, sizeof(CMD_PARM_HIGH_TRESH)); // Parameter: High signal threshold aka move sence
+  reg_frame.data_length += sizeof(CMD_PARM_HIGH_TRESH);
+  memcpy(&reg_frame.data[reg_frame.data_length], &move_gate, sizeof(move_gate));
+  reg_frame.data_length += sizeof(move_gate);
+  memcpy(&reg_frame.data[reg_frame.data_length], &move_sens, sizeof(move_sens));
+  reg_frame.data_length += sizeof(move_sens);
+  memcpy(&reg_frame.data[reg_frame.data_length], &CMD_PARM_LOW_TRESH, sizeof(CMD_PARM_LOW_TRESH)); // Parameter: Low signal threshold aka still sence
+  reg_frame.data_length += sizeof(CMD_PARM_LOW_TRESH);
+  memcpy(&reg_frame.data[reg_frame.data_length], &still_gate, sizeof(still_gate));
+  reg_frame.data_length += sizeof(still_gate);
+    memcpy(&reg_frame.data[reg_frame.data_length], &still_sens, sizeof(still_sens));
+  reg_frame.data_length += sizeof(still_sens);
+  reg_frame.footer = CMD_FRAME_FOOTER;
+  ESP_LOGV(TAG,"Sending gate sensitivity params: %2X",reg_frame.command);
+  send_cmd_from_array_(cmdArray, reg_frame);
 
-  uint8_t record[18] = {  lowbyte(move_gate),
-                          highbyte(move_gate),
-                          lowbyte(move_sens),
-                          highbyte(move_sens),
-                          0x00,
-                          0x00,
-                          lowbyte(still_gate),
-                          highbyte(still_gate),
-                          lowbyte(still_sens),
-                          highbyte(still_sens),
-                          0x00,
-                          0x00};
-  this->send_command_(CMD_WRITE_REGISTER, record, 18);
-
-}
-void LD2420Component::set_max_distances_timeout_(uint8_t max_moving_distance_range, uint8_t max_still_distance_range,
-                                                 uint16_t timeout) {
-  uint8_t value[18] = {0x00,
-                       0x00,
-                       lowbyte(max_moving_distance_range),
-                       highbyte(max_moving_distance_range),
-                       0x00,
-                       0x00,
-                       0x01,
-                       0x00,
-                       lowbyte(max_still_distance_range),
-                       highbyte(max_still_distance_range),
-                       0x00,
-                       0x00,
-                       0x02,
-                       0x00,
-                       lowbyte(timeout),
-                       highbyte(timeout),
-                       0x00,
-                       0x00};
-  this->send_command_(CMD_MAXDIST_DURATION, value, 18);
-  this->query_parameters_();
-}
-
-void LD2420Component::set_gate_threshold_(uint8_t gate, uint16_t motionsens, uint16_t stillsens) {
-  // reference
-  // https://drive.google.com/drive/folders/1p4dhbEJA3YubyIjIIC7wwVsSo8x29Fq-?spm=a2g0o.detail.1000023.17.93465697yFwVxH
-  //   Send data: configure the motion sensitivity of distance gate 3 to 40, and the static sensitivity of 40
-  // 00 00 (gate)
-  // 03 00 00 00 (gate number)
-  // 01 00 (motion sensitivity)
-  // 28 00 00 00 (value)
-  // 02 00 (still sensitivtiy)
-  // 28 00 00 00 (value)
-  uint8_t value[18] = {0x00, 0x00, lowbyte(gate),       highbyte(gate),       0x00, 0x00,
-                       0x01, 0x00, lowbyte(motionsens), highbyte(motionsens), 0x00, 0x00,
-                       0x02, 0x00, lowbyte(stillsens),  highbyte(stillsens),  0x00, 0x00};
-  this->send_command_(CMD_GATE_SENS, value, 18);
 }
 
 }  // namespace ld2420

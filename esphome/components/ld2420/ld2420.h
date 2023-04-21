@@ -23,6 +23,8 @@ static const uint16_t CMD_DISABLE_CONF = 0x00FE;
 static const uint16_t CMD_READ_VERSION = 0x0000;
 static const uint16_t CMD_WRITE_REGISTER = 0x0001;
 static const uint16_t CMD_READ_REGISTER = 0x0002;
+static const uint16_t CMD_PARM_HIGH_TRESH = 0x0012;
+static const uint16_t CMD_PARM_LOW_TRESH = 0x0021;
 static const uint16_t CMD_WRITE_ABD_PARAM = 0x0007;
 static const uint16_t CMD_READ_ABD_PARAM = 0x0008;
 static const uint16_t CMD_WRITE_SYS_PARAM = 0x00012;
@@ -42,8 +44,8 @@ static const uint16_t CMD_RESTART = 0x00A3;
 
 
 // Register address values
-static const uint16_t CMD_MAX_GATE_REG =  0x0000;
-static const uint16_t CMD_MIN_GATE_REG =  0x0001;
+static const uint16_t CMD_MIN_GATE_REG =  0x0000;
+static const uint16_t CMD_MAX_GATE_REG =  0x0001;
 static const uint16_t CMD_TIMEOUT_REG =   0x0002;
 static const uint16_t CMD_MOVE_GATE[16] =  {0x0010, 0x0011, 0x0012, 0x0013,
                                             0x0014, 0x0015, 0x0016, 0x0017,
@@ -103,27 +105,24 @@ public:
   void dump_config() override;
   void loop() override;
 
-  // struct cmd_data {
-  //   uint16_t data[4];  // Keep it short 4-8 elements makes sence
-  //   uint8_t count;
-  // };
-
-  struct cmd_frame {
+  struct cmd_frame_t {
     uint32_t header;
     uint16_t length;
     uint16_t command;
-    uint16_t data[4];
+    uint8_t data[18];
+    uint16_t data_length;
     uint8_t elements;
     uint32_t footer;
-    uint8_t type;
   };
+
 
 #ifdef USE_BINARY_SENSOR
   void set_presence_sensor(binary_sensor::BinarySensor *sens) { this->presence_binary_sensor_ = sens; };
   void set_moving_target_sensor(binary_sensor::BinarySensor *sens) { this->moving_binary_sensor_ = sens; };
   void set_still_target_sensor(binary_sensor::BinarySensor *sens) { this->still_binary_sensor_ = sens; };
 #endif
-  void build_cmd_array_(uint8_t* cmdArray, cmd_frame);
+  void send_cmd_from_array_(uint8_t* cmdArray, cmd_frame_t cmd_frame);
+  void get_firmware_version_(void);
   void set_object_range_(uint16_t range) {this->object_range_ = range; };
   void set_object_presence_(bool presence) {this->presence_ = presence; };
   void set_timeout(uint16_t value) { this->timeout_ = value; };
@@ -188,26 +187,24 @@ public:
   std::vector<uint8_t> rx_buffer_;
   int two_byte_to_int_(char firstbyte, char secondbyte) { return (int16_t) (secondbyte << 8) + firstbyte; }
   void send_command_(uint8_t command_str, uint8_t *command_value, int command_value_len);
-  void set_max_distances_timeout_(uint8_t max_moving_distance_range, uint8_t max_still_distance_range,
-                                  uint16_t timeout);
-  void set_min_max_distances_timeout_(uint8_t max_gate_distance, uint8_t min_gate_distance, uint16_t timeout);
+  void set_min_max_distances_timeout_(uint32_t max_gate_distance, uint32_t min_gate_distance, uint32_t timeout);
   void set_gate_thresholds_(uint8_t gate, uint16_t move_sens, uint16_t still_sens);
-  void set_gate_threshold_(uint8_t gate, uint16_t motionsens, uint16_t stillsens);
   void set_config_mode_(bool enable);
   void handle_periodic_data_(uint8_t *buffer, int len);
+  void received_frame_handler_(uint8_t *buffer, int len);
   void handle_normal_mode_(uint8_t *buffer, int len);
   void handle_ack_data_(uint8_t *buffer, int len);
   void readline_(int readch, uint8_t *buffer, int len);
   void query_parameters_();
   void get_version_();
 
-  uint16_t timeout_;
-  uint8_t max_gate_distance_;
-  uint8_t min_gate_distance_;
+  uint32_t timeout_;
+  uint32_t max_gate_distance_;
+  uint32_t min_gate_distance_;
   uint16_t object_range_;
+  char ld2420_firmware_ver_[8];
   bool presence_;
 
-  uint8_t version_[6];
   uint16_t rg0_move_threshold_, rg0_still_threshold_, rg1_move_threshold_, rg1_still_threshold_,
       rg2_move_threshold_, rg2_still_threshold_, rg3_move_threshold_, rg3_still_threshold_,
       rg4_move_threshold_, rg4_still_threshold_, rg5_move_threshold_, rg5_still_threshold_,
